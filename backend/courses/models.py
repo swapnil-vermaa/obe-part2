@@ -13,6 +13,10 @@ class Course(models.Model):
     program_name = models.CharField(max_length=120, blank=True, help_text='e.g. M.Tech CSE, B.Tech CSE')
     department = models.CharField(max_length=255, blank=True, help_text='e.g. Department of CSE & IT')
     nba_code = models.CharField(max_length=20, blank=True)
+    is_lab = models.BooleanField(
+        default=False,
+        help_text='Lab course offering (separate list; different Students & Marks sub-tabs).',
+    )
     semester = models.CharField(max_length=6, choices=Semester.choices)
     academic_year = models.CharField(max_length=20, help_text='Session, e.g. 2024-25 or 2024-2025')
     credits = models.PositiveSmallIntegerField(default=3)

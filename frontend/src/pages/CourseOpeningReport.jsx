@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import api from '../api/client';
 import CourseSubnav from '../components/CourseSubnav';
 import A4Document from '../components/A4Document';
+import useCourseNav from '../hooks/useCourseNav';
 
 const LEVEL_LABELS = {
   REMEMBER: 'Remember Level (Level 1)',
@@ -73,6 +74,7 @@ function emptyMod() {
 
 export default function CourseOpeningReport() {
   const { id } = useParams();
+  const { basePath, listLabel } = useCourseNav();
   const [course, setCourse] = useState(null);
   const [report, setReport] = useState(null);
   const [previousYear, setPreviousYear] = useState('');
@@ -213,13 +215,13 @@ export default function CourseOpeningReport() {
   return (
     <div className="p-8 max-w-6xl mx-auto print:p-0 print:max-w-none">
       <div className="no-print">
-        <Link to="/courses" className="text-sm text-slate-500 hover:text-slate-700">← Back to Courses</Link>
+        <Link to={basePath} className="text-sm text-slate-500 hover:text-slate-700">← Back to {listLabel}</Link>
         <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{course.course_code} — {course.course_name}</h1>
         <p className="text-sm text-slate-500 mb-4">
           Session {course.academic_year} · {semesterWord}
           {course.faculty_name ? ` · ${course.faculty_name}` : ''}
         </p>
-        <CourseSubnav courseId={id} />
+        <CourseSubnav courseId={id} course={course} />
 
         {error && <div className="bg-red-50 text-red-700 text-sm rounded p-3 mb-4">{error}</div>}
         {status && <div className="bg-emerald-50 text-emerald-800 text-sm rounded p-3 mb-4">{status}</div>}

@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
+import LabCourses from './pages/LabCourses';
 import CourseDetail from './pages/CourseDetail';
 import CourseDescription from './pages/CourseDescription';
 import CourseOpeningReport from './pages/CourseOpeningReport';
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute adminOnly><Users /></ProtectedRoute>} />
+
         <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
         <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
         <Route path="/courses/:id/description" element={<ProtectedRoute><CourseDescription /></ProtectedRoute>} />
@@ -30,6 +32,14 @@ export default function App() {
         <Route path="/courses/:id/assessments" element={<ProtectedRoute><CourseAssessments /></ProtectedRoute>} />
         <Route path="/courses/:id/assessment-tools" element={<ProtectedRoute><CourseAssessmentTools /></ProtectedRoute>} />
         <Route path="/courses/:id/closing-report" element={<ProtectedRoute><CourseClosingReport /></ProtectedRoute>} />
+
+        <Route path="/lab-courses" element={<ProtectedRoute><LabCourses /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id/description" element={<ProtectedRoute><CourseDescription /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id/opening-report" element={<ProtectedRoute><CourseOpeningReport /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id/assessments" element={<ProtectedRoute><CourseAssessments /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id/assessment-tools" element={<ProtectedRoute><CourseAssessmentTools /></ProtectedRoute>} />
+        <Route path="/lab-courses/:id/closing-report" element={<ProtectedRoute><CourseClosingReport /></ProtectedRoute>} />
       </Routes>
     </div>
   );

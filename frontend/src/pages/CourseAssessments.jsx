@@ -3,13 +3,23 @@ import { Link, useParams } from 'react-router-dom';
 import api from '../api/client';
 import CourseSubnav from '../components/CourseSubnav';
 import SheetPreview from '../components/SheetPreview';
+import useCourseNav from '../hooks/useCourseNav';
 
-const BLOCKS = [
+const THEORY_BLOCKS = [
   { key: 'T1', label: 'T1' },
   { key: 'T2', label: 'T2' },
   { key: 'T3', label: 'T3' },
   { key: 'TA', label: 'TA / Project' },
   { key: 'FEEDBACK', label: 'CO Feedback' },
+];
+
+/** Lab Students & Marks sub-tabs (structure only — content filled later). */
+const LAB_PLACEHOLDER_TABS = [
+  { id: 'MID_SEM', label: 'Mid Sem' },
+  { id: 'END_SEM', label: 'End Sem' },
+  { id: 'D2D', label: 'D2D' },
+  { id: 'EXIT_SURVEY', label: 'Exit Survey' },
+  { id: 'CO_ATTAINMENT', label: 'CO Attainment' },
 ];
 
 function list(data) {
@@ -57,6 +67,7 @@ function BarChart({ title, items, unit = '' }) {
 
 export default function CourseAssessments() {
   const { id } = useParams();
+  const { basePath, listLabel } = useCourseNav();
   const [course, setCourse] = useState(null);
   const [students, setStudents] = useState([]);
   const [assessments, setAssessments] = useState([]);
@@ -72,8 +83,9 @@ export default function CourseAssessments() {
   const [bulkText, setBulkText] = useState('');
   const [marksGrid, setMarksGrid] = useState({});
 
+  const isLab = !!(course?.is_lab);
   const outcomes = course?.outcomes ?? [];
-  const block = assessments.find((a) => a.assessment_type === tab) || null;
+  const block = !isLab ? (assessments.find((a) => a.assessment_type === tab) || null) : null;
 
   const [loading, setLoading] = useState(true);
 
@@ -89,30 +101,36 @@ export default function CourseAssessments() {
       ]);
       setCourse(courseRes.data);
       setStudents(list(studentRes.data));
-      const nextA = list(assessmentRes.data).filter((a) => BLOCKS.some((b) => b.key === a.assessment_type));
-      const unique = [];
-      const seen = new Set();
-      for (const a of nextA) {
-        if (seen.has(a.assessment_type)) continue;
-        seen.add(a.assessment_type);
-        unique.push(a);
-      }
-      if (unique.length < BLOCKS.length) {
-        await api.post('/assessments/ensure/', { course: Number(id) });
-        const refreshed = list((await api.get(`/assessments/?course=${id}`)).data)
-          .filter((a) => BLOCKS.some((b) => b.key === a.assessment_type));
-        const uniq2 = [];
-        const seen2 = new Set();
-        for (const a of refreshed) {
-          if (seen2.has(a.assessment_type)) continue;
-          seen2.add(a.assessment_type);
-          uniq2.push(a);
-        }
-        setAssessments(uniq2);
+      const lab = !!courseRes.data?.is_lab;
+      if (lab) {
+        setAssessments([]);
+        setGrades(list(gradeRes.data));
       } else {
-        setAssessments(unique);
+        const nextA = list(assessmentRes.data).filter((a) => THEORY_BLOCKS.some((b) => b.key === a.assessment_type));
+        const unique = [];
+        const seen = new Set();
+        for (const a of nextA) {
+          if (seen.has(a.assessment_type)) continue;
+          seen.add(a.assessment_type);
+          unique.push(a);
+        }
+        if (unique.length < THEORY_BLOCKS.length) {
+          await api.post('/assessments/ensure/', { course: Number(id) });
+          const refreshed = list((await api.get(`/assessments/?course=${id}`)).data)
+            .filter((a) => THEORY_BLOCKS.some((b) => b.key === a.assessment_type));
+          const uniq2 = [];
+          const seen2 = new Set();
+          for (const a of refreshed) {
+            if (seen2.has(a.assessment_type)) continue;
+            seen2.add(a.assessment_type);
+            uniq2.push(a);
+          }
+          setAssessments(uniq2);
+        } else {
+          setAssessments(unique);
+        }
+        setGrades(list(gradeRes.data));
       }
-      setGrades(list(gradeRes.data));
     } catch (err) {
       setError(formatError(err, 'Failed to load course data.'));
     } finally {
@@ -270,12 +288,22 @@ export default function CourseAssessments() {
     }
   }
 
-  const tabs = useMemo(() => [
-    { id: 'roster', label: 'Roster' },
-    ...BLOCKS,
-    { id: 'attainment', label: 'Attainment' },
-    { id: 'result', label: 'Result' },
-  ], []);
+  const tabs = useMemo(() => {
+    if (isLab) {
+      return [
+        { id: 'roster', label: 'Roster' },
+        ...LAB_PLACEHOLDER_TABS,
+      ];
+    }
+    return [
+      { id: 'roster', label: 'Roster' },
+      ...THEORY_BLOCKS,
+      { id: 'attainment', label: 'Attainment' },
+      { id: 'result', label: 'Result' },
+    ];
+  }, [isLab]);
+
+  const labPlaceholder = isLab && LAB_PLACEHOLDER_TABS.some((t) => t.id === tab);
 
   if (loading && !course) return <div className="p-8">Loading…</div>;
   if (!course) {
@@ -288,12 +316,14 @@ export default function CourseAssessments() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto print:p-0 print:max-w-none">
-      <Link to="/courses" className="text-sm text-slate-500 hover:text-slate-700 no-print">← Back to Courses</Link>
+      <Link to={basePath} className="text-sm text-slate-500 hover:text-slate-700 no-print">← Back to {listLabel}</Link>
       <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1 no-print">{course.course_code} — {course.course_name}</h1>
       <p className="text-sm text-slate-500 mb-4 no-print">
-        {course.semester} · {course.academic_year} · one shared student list for T1, T2, T3, TA and Feedback
+        {isLab
+          ? `${course.semester} · ${course.academic_year} · one shared student list for Mid Sem, End Sem, D2D, Exit Survey and CO Attainment`
+          : `${course.semester} · ${course.academic_year} · one shared student list for T1, T2, T3, TA and Feedback`}
       </p>
-      <CourseSubnav courseId={id} />
+      <CourseSubnav courseId={id} course={course} />
 
       {error && <div className="bg-red-50 text-red-700 text-sm rounded p-3 mb-4 no-print">{error}</div>}
       {status && <div className="bg-emerald-50 text-emerald-800 text-sm rounded p-3 mb-4 no-print">{status}</div>}
@@ -310,6 +340,14 @@ export default function CourseAssessments() {
           </button>
         ))}
       </div>
+
+      {labPlaceholder && (
+        <section className="bg-white shadow rounded-lg p-6">
+          <p className="text-sm text-slate-400">
+            {LAB_PLACEHOLDER_TABS.find((t) => t.id === tab)?.label || tab} content coming soon.
+          </p>
+        </section>
+      )}
 
       {tab === 'roster' && (
         <section className="bg-white shadow rounded-lg p-6">
@@ -343,7 +381,7 @@ export default function CourseAssessments() {
         </section>
       )}
 
-      {BLOCKS.some((b) => b.key === tab) && block && (
+      {!isLab && THEORY_BLOCKS.some((b) => b.key === tab) && block && (
         <div className="space-y-4">
           <div className="no-print space-y-4">
           <section className="bg-white shadow rounded-lg p-6">

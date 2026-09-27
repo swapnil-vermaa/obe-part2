@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import CourseSubnav from '../components/CourseSubnav';
 import { useAuth } from '../context/AuthContext';
+import useCourseNav from '../hooks/useCourseNav';
 
 export default function CourseDetail() {
   const { id } = useParams();
   const { isAdmin } = useAuth();
+  const { basePath, listLabel } = useCourseNav();
   const [course, setCourse] = useState(null);
   const [facultyList, setFacultyList] = useState([]);
   const [attainments, setAttainments] = useState([]);
@@ -34,7 +36,7 @@ export default function CourseDetail() {
   async function deleteCourse() {
     if (!window.confirm(`Delete ${course.course_code}? All students, marks, and mapping will be removed.`)) return;
     await api.delete(`/courses/${id}/`);
-    window.location.href = '/courses';
+    window.location.href = basePath;
   }
 
   async function recalculate() {
@@ -48,7 +50,7 @@ export default function CourseDetail() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <Link to="/courses" className="text-sm text-slate-500 hover:text-slate-700">← Back to Courses</Link>
+      <Link to={basePath} className="text-sm text-slate-500 hover:text-slate-700">← Back to {listLabel}</Link>
       <div className="flex flex-wrap items-start justify-between gap-3 mt-2 mb-1">
         <h1 className="text-2xl font-bold text-slate-900">{course.course_code} — {course.course_name}</h1>
         <button type="button" onClick={deleteCourse} className="text-xs font-semibold text-red-700 bg-red-50 px-3 py-1.5 rounded">
@@ -59,7 +61,7 @@ export default function CourseDetail() {
         {course.program_name ? `${course.program_name} · ` : ''}
         {course.semester} · {course.academic_year}
       </p>
-      <CourseSubnav courseId={id} />
+      <CourseSubnav courseId={id} course={course} />
 
       <div className="bg-white shadow rounded-lg p-4 mb-6 flex flex-wrap items-center gap-3">
         <span className="text-sm text-slate-600">Assigned faculty:</span>

@@ -54,6 +54,7 @@ class DashboardSummaryView(APIView):
                     'id': c.id,
                     'course_code': c.course_code,
                     'course_name': c.course_name,
+                    'is_lab': c.is_lab,
                     'semester': c.semester,
                     'academic_year': c.academic_year,
                     'outcome_count': c.outcome_count,

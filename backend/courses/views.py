@@ -24,6 +24,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         year = self.request.query_params.get('academic_year') or self.request.query_params.get('session')
         if year:
             qs = qs.filter(academic_year=year)
+        is_lab = self.request.query_params.get('is_lab')
+        if is_lab is not None and is_lab != '':
+            qs = qs.filter(is_lab=str(is_lab).lower() in ('1', 'true', 'yes'))
         return qs
 
     def perform_create(self, serializer):

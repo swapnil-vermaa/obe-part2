@@ -70,7 +70,8 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
-            'id', 'course_code', 'course_name', 'program_name', 'department', 'nba_code', 'semester', 'academic_year',
+            'id', 'course_code', 'course_name', 'program_name', 'department', 'nba_code', 'is_lab',
+            'semester', 'academic_year',
             'credits', 'faculty', 'faculty_name', 'outcomes', 'created_at',
             'doc_title', 'institute', 'institute_sub', 'logo_fallback', 'watermark_text',
             'coordinator_names', 't1_marks', 't2_marks', 'end_sem_marks', 'ta_marks',
@@ -82,6 +83,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'program_name': {'required': False, 'allow_blank': True},
             'department': {'required': False, 'allow_blank': True},
             'nba_code': {'required': False, 'allow_blank': True},
+            'is_lab': {'required': False},
         }
         # UniqueConstraint(course_code, academic_year, faculty) would otherwise
         # force faculty in the payload. Faculty users are assigned in validate().
